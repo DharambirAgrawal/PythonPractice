@@ -1,7 +1,7 @@
 from PIL import Image, ImageEnhance, ImageFilter
 
 with Image.open('./Images/Bird.jfif') as picture:
-    # picture.show()
+    picture.show()
     black_white=picture.convert('L')
     # black_white.show()
     black_white.save('./Images/Bird_bw.png')
@@ -15,7 +15,7 @@ with Image.open('./Images/Bird.jfif') as picture:
     contrast.enhance(2).save('./Images/Bird_contrast.png')
 
     color=ImageEnhance.Color(picture).enhance(2).save('./Images/Bird_color.png')
-    # picture.save('./Images/Bird.png')
+    picture.save('./Images/Bird.png')
     # picture.save('./Images/Bird.jpg')
     # picture.save('./Images/Bird.bmp')
     # picture.save('./Images/Bird.tiff')

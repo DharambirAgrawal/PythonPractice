@@ -4,7 +4,7 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
 from PIL import Image,ImageFilter,ImageEnhance
 
-
+# for handling the files
 class FilesHandler:
     def __init__(self):
         self.working_dir=""
@@ -29,6 +29,7 @@ class FilesHandler:
         return results
     
 
+# for editing th photo
 class Editor(FilesHandler):
     def __init__(self):
         super().__init__()

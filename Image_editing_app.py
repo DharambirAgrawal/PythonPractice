@@ -17,8 +17,8 @@ class FilesHandler:
         # os.listdir(self.working_dir)--> #['Bird.jfif', 'Bird_blur.png', 'Bird_bw.png', 'Bird_color.png' ]
         if self.working_dir == '':
             return
-        self.filenames=self.filter(os.listdir(self.working_dir))
-    def filter(self,files):
+        self.filenames=self.filter_files(os.listdir(self.working_dir))
+    def filter_files(self,files):
         # filter the files with the extensions of images only
         results =[]
 
@@ -51,6 +51,56 @@ class Editor(FilesHandler):
             os.mkdir(path)
         fullname=os.path.join(path,self.filename)
         self.image.save(fullname)
+
+    #functions for the image to convert
+
+    def gray(self):
+        self.image=self.image.convert("L")
+        self.save_image()
+        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
+        self.show_image(image_path)
+
+    def left(self):
+        self.image=self.image.transpose(Image.ROTATE_90)
+        self.save_image()
+        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
+        self.show_image(image_path)
+    def right(self):
+        self.image=self.image.transpose(Image.ROTATE_270)
+        self.save_image()
+        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
+        self.show_image(image_path)
+    def mirror(self):
+        self.image=self.image.transpose(Image.FLIP_LEFT_RIGHT)
+        self.save_image()
+        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
+        self.show_image(image_path)
+
+    def sharpen(self):
+        self.image=self.image.filter(ImageFilter.SHARPEN)
+        self.save_image()
+        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
+        self.show_image(image_path)
+    def blur(self):
+        self.image=self.image.filter(ImageFilter.BLUR)
+        self.save_image()
+        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
+        self.show_image(image_path)
+    def color(self):
+        self.image=ImageEnhance.Color(self.image).enhance(1.2)
+        self.save_image()
+        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
+        self.show_image(image_path)
+    def contrast(self):
+        self.image=ImageEnhance.Contrast(self.image).enhance(1.2)
+        self.save_image()
+        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
+        self.show_image(image_path)
+    def reset(self):
+        self.image=self.original.copy()
+        self.save_image()
+        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
+        self.show_image(image_path)
 
    
 
@@ -90,7 +140,7 @@ class ImageEditingApp(QWidget,Editor):
         for filter in self.filters:
             self.filter_box.addItem(filter)
 
-        self.picture_box=QLabel("Image will be here")
+        self.picture_box=QLabel("Image will be here") #Image display box
 
         #designs
 
@@ -126,6 +176,19 @@ class ImageEditingApp(QWidget,Editor):
         #events
         self.btn_folder.clicked.connect(self.update_list)
         self.file_list.currentRowChanged.connect(self.displayImage)
+
+        #filter events
+        self.btn_gray.clicked.connect(self.gray)
+        self.btn_left.clicked.connect(self.left)
+        self.btn_right.clicked.connect(self.right)
+        self.btn_mirror.clicked.connect(self.mirror)
+        self.btn_sharp.clicked.connect(self.sharpen)
+        # self.btn_smooth.clicked.connect(self.smooth)
+        self.btn_reset.clicked.connect(self.reset)
+        self.btn_saturation.clicked.connect(self.color)
+        self.btn_contrast.clicked.connect(self.contrast)
+        self.btn_blur.clicked.connect(self.blur)
+
     
     def update_list(self):
         self.get_working_dir()

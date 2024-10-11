@@ -1,5 +1,4 @@
 import os
-import select
 from PyQt5.QtWidgets import QApplication,QWidget,QPushButton,QVBoxLayout,QHBoxLayout,QListWidget,QComboBox,QLabel,QFileDialog
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
@@ -49,6 +48,20 @@ class Editor(FilesHandler):
                 "Contrast":lambda image: ImageEnhance.Contrast(image).enhance(1.2),
                 "Blur":lambda image: image.filter(ImageFilter.BLUR)
             }
+        
+        self.filter_button_mapping={
+            "Original":lambda image: self.original.copy(),
+            "B/W":lambda image: image.convert("L"),
+            "Left":lambda image: image.transpose(Image.ROTATE_90),
+            "Right":lambda image: image.transpose(Image.ROTATE_270),
+            "Mirror":lambda image: image.transpose(Image.FLIP_LEFT_RIGHT),
+            "Sharapen":lambda image: image.filter(ImageFilter.SHARPEN),
+            "Color":lambda image: ImageEnhance.Color(image).enhance(1.2),
+            "Contrast":lambda image: ImageEnhance.Contrast(image).enhance(1.2),
+            "Blur":lambda image: image.filter(ImageFilter.BLUR),
+            "Smooth":lambda image: image.filter(ImageFilter.SMOOTH),
+            "Reset":lambda image: self.original.copy()
+        }
     
     def load_image(self,filename):
         self.filename=filename
@@ -64,62 +77,6 @@ class Editor(FilesHandler):
         fullname=os.path.join(path,self.filename)
         self.image.save(fullname)
 
-   
-
-    #functions for the image to convert
-
-    def gray(self):
-        self.image=self.image.convert("L")
-        self.save_image()
-        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
-        self.show_image(image_path)
-
-    def left(self):
-        self.image=self.image.transpose(Image.ROTATE_90)
-        self.save_image()
-        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
-        self.show_image(image_path)
-    def right(self):
-        self.image=self.image.transpose(Image.ROTATE_270)
-        self.save_image()
-        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
-        self.show_image(image_path)
-    def mirror(self):
-        self.image=self.image.transpose(Image.FLIP_LEFT_RIGHT)
-        self.save_image()
-        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
-        self.show_image(image_path)
-
-    def sharpen(self):
-        self.image=self.image.filter(ImageFilter.SHARPEN)
-        self.save_image()
-        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
-        self.show_image(image_path)
-    def blur(self):
-        self.image=self.image.filter(ImageFilter.BLUR)
-        self.save_image()
-        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
-        self.show_image(image_path)
-    def color(self):
-        self.image=ImageEnhance.Color(self.image).enhance(1.2)
-        self.save_image()
-        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
-        self.show_image(image_path)
-    def contrast(self):
-        self.image=ImageEnhance.Contrast(self.image).enhance(1.2)
-        self.save_image()
-        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
-        self.show_image(image_path)
-    def smooth(self):
-        self.image=self.image.filter(ImageFilter.SMOOTH)
-        self.save_image()
-        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
-        self.show_image(image_path)
-    def reset(self):
-        self.image=self.original.copy()
-        self.save_image()
-        image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
-        self.show_image(image_path)
 
     def apply_filter(self,filter_name):   
         filter_function=self.filter_mapping.get(filter_name) #get the function from the dictionary according to filter name
@@ -130,10 +87,15 @@ class Editor(FilesHandler):
             self.show_image(image_path)
         pass
 
+    def apply_button_filter(self,filter_name):
+        filter_function=self.filter_button_mapping.get(filter_name) #get the function from the dictionary according to filter name
+        if filter_function:
+            self.image=filter_function(self.image)
+            self.save_image()
+            image_path=os.path.join(self.working_dir,self.save_dir,self.filename)
+            self.show_image(image_path)
+        pass
    
-
-
-
 
 
 class ImageEditingApp(QWidget,Editor):
@@ -149,6 +111,7 @@ class ImageEditingApp(QWidget,Editor):
         self.btn_folder=QPushButton("Oper Folder")
         self.file_list=QListWidget()  #list of files in the folder
 
+        #buttons for filters
         self.btn_left=QPushButton("Rotate Left")
         self.btn_right=QPushButton("Rotate Right")
         self.btn_mirror=QPushButton("Mirror")
@@ -163,8 +126,6 @@ class ImageEditingApp(QWidget,Editor):
         #drop down menu
 
         self.filter_box=QComboBox()
-
-        # self.filters=["Original","Left","Right","Mirror","Sharapen","B/W","Color","Contrast","Blur"] #list of filters
         for filter in self.filter_mapping.keys():
             self.filter_box.addItem(filter)
             
@@ -207,16 +168,18 @@ class ImageEditingApp(QWidget,Editor):
         self.file_list.currentRowChanged.connect(self.displayImage)
 
         #filter events
-        self.btn_gray.clicked.connect(self.gray)
-        self.btn_left.clicked.connect(self.left)
-        self.btn_right.clicked.connect(self.right)
-        self.btn_mirror.clicked.connect(self.mirror)
-        self.btn_sharp.clicked.connect(self.sharpen)
-        self.btn_smooth.clicked.connect(self.smooth)
-        self.btn_reset.clicked.connect(self.reset)
-        self.btn_saturation.clicked.connect(self.color)
-        self.btn_contrast.clicked.connect(self.contrast)
-        self.btn_blur.clicked.connect(self.blur)
+
+
+        self.btn_gray.clicked.connect(lambda: self.apply_button_filter("B/W"))
+        self.btn_left.clicked.connect(lambda: self.apply_button_filter("Left"))
+        self.btn_right.clicked.connect(lambda: self.apply_button_filter("Right"))
+        self.btn_mirror.clicked.connect(lambda: self.apply_button_filter("Mirror"))
+        self.btn_sharp.clicked.connect(lambda: self.apply_button_filter("Sharapen"))    
+        self.btn_smooth.clicked.connect(lambda: self.apply_button_filter("Smooth")) 
+        self.btn_reset.clicked.connect(lambda: self.apply_button_filter("Reset"))
+        self.btn_saturation.clicked.connect(lambda: self.apply_button_filter("Color"))  
+        self.btn_contrast.clicked.connect(lambda: self.apply_button_filter("Contrast"))
+        self.btn_blur.clicked.connect(lambda: self.apply_button_filter("Blur"))
 
         #filter box event
         self.filter_box.currentTextChanged.connect(self.handle_filter)
@@ -251,13 +214,6 @@ class ImageEditingApp(QWidget,Editor):
         # self.show_image(filename)
 
         
-
-
-
-
-
-
-
 
 if __name__ == "__main__":
     app=QApplication([])

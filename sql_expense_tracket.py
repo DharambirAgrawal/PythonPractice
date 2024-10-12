@@ -1,6 +1,6 @@
 #import modules
-from PyQt5.QtWidgets import QApplication,QWidget,QPushButton,QVBoxLayout,QHBoxLayout,QComboBox,QLabel,QDateEdit,QLineEdit,QTableWidget,QMessageBox,QTableWidgetItem
-from PyQt5.QtCore import QDate
+from PyQt5.QtWidgets import QApplication,QWidget,QPushButton,QVBoxLayout,QHBoxLayout,QComboBox,QLabel,QDateEdit,QLineEdit,QTableWidget,QMessageBox,QTableWidgetItem,QHeaderView
+from PyQt5.QtCore import QDate,Qt
 from PyQt5.QtSql import QSqlDatabase,QSqlQuery
 import sys
 
@@ -26,14 +26,41 @@ class ExpenseTracker(QWidget):
         self.table=QTableWidget()
         self.table.setColumnCount(5)  #Id, Date, Category, Description, Amount
         self.table.setHorizontalHeaderLabels(["Id","Date","Category","Description","Amount"])
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch) #resizing the description column
 
         #adding drop downs
         self.dropdown.addItems(["Food","Transport","Rent","Entertainment","Bills","Other"])
 
         #setting date
         self.date_box.setDate(QDate.currentDate())
+        self.date_box.setCalendarPopup(True)
 
+        # setting Amount placeholder
+        self.amount.setPlaceholderText("Amount")
         #app designs
+        self.setStyleSheet(""" 
+                                    QWidget{ background-color: #f0f0f0; font-size: 18px; }
+                                    QTableWidget{ background-color: #fff; }
+                                    QLineEdit,QComboBox,QDateEdit{ background-color: #fff; font-size: 18px; }
+                                    QPushButton{ background-color: #007bff; color: #fff; font-size: 18px; padding: 5px 10px; border-radius: 5px; }
+                                    QPushButton:hover{ background-color: #0056b3; }
+                                    QLabel{ font-size: 16px; }
+                                    QMessageBox{ font-size: 16px; }
+                                    QTableWidget::item{ padding: 5px; }
+                       """)
+        self.add_btn.setStyleSheet("""
+                                   QPushButton{ background-color: #28a745; }
+                                   QPushButton:hover{ background-color: #218838; }
+                                   """)
+        
+        self.delete_btn.setStyleSheet("""
+                                      QPushButton{ background-color: #dc3545; }
+                                      QPushButton:hover{ background-color: #c82333;  }
+                                      """)
+        
+
+        #layouts
+
         self.master_layout=QVBoxLayout()
 
         self.row1=QHBoxLayout()
@@ -64,6 +91,7 @@ class ExpenseTracker(QWidget):
 
         #setting the master layout
         self.setLayout(self.master_layout)
+
         self.load_table()
 
         #events
@@ -87,6 +115,7 @@ class ExpenseTracker(QWidget):
             # add the data to the table
 
             self.table.insertRow(row)
+
             self.table.setItem(row,0,QTableWidgetItem(str(expense_id))) #row, column, value
             self.table.setItem(row,1,QTableWidgetItem(date))
             self.table.setItem(row,2,QTableWidgetItem(str(category)))
